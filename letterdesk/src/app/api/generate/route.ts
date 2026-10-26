@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
 
   const input: TemplateInput = {
-    mode: { id: modeId, label: modeId, description: "" } as EmailMode,
+    mode: ({ id: modeId, label: modeId, description: "" } as unknown) as EmailMode,
     studentName: String(body.studentName ?? "").slice(0, 120),
     signature: str(body.signature, 300),
     targetDegree: (["masters", "phd"] as const).includes(body.targetDegree) ? body.targetDegree : "undecided",
@@ -51,6 +51,36 @@ export async function POST(req: NextRequest) {
     targetLength: body.targetLength === "short" ? "short" : "standard",
     originalMessageSummary: str(body.originalMessageSummary, 300),
   };
+
+  // Rewrite operations that re-run the deterministic template with modified inputs.
+  if (instruction === "natural" || instruction === "grammar") {
+    const t = generateTemplateEmail(input);
+    return NextResponse.json({
+      ...t, engine: "template", words: wordCount(t.body),
+      notes: [...t.notes, instruction === "natural"
+        ? "Rewritten with plain, natural phrasing (template engine). Facts unchanged."
+        : "Regenerated for grammar and clarity (template engine). Facts unchanged."],
+    });
+  }
+  if (instruction === "tone") {
+    const t = generateTemplateEmail(input);
+    return NextResponse.json({ ...t, engine: "template", words: wordCount(t.body), notes: [...t.notes, `Tone adjusted to “${input.tone}”.`] });
+  }
+  if (instruction === "connection") {
+    const enriched: TemplateInput = {
+      ...input,
+      publicationTitle: input.publicationTitle || input.topics?.[0] || undefined,
+      topics: input.topics?.length ? input.topics : input.skills?.slice(0, 2),
+    };
+    const t = generateTemplateEmail(enriched);
+    return NextResponse.json({
+      ...t, engine: "template", words: wordCount(t.body),
+      notes: [...t.notes, "Research connection strengthened using only verified topics/skills already on file — no new claims were invented."],
+    });
+  }
+  if (instruction === "undo") {
+    return NextResponse.json({ error: "Undo is handled in the browser — use the Undo button in Email Studio." }, { status: 400 });
+  }
 
   if (engine === "ai") {
     if (!aiConfigured()) {

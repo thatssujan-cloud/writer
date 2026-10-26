@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { searchResearchers, UpstreamError } from "@/lib/openalex";
 import { SAMPLE_RESEARCHERS } from "@/lib/sample-data";
+import { computeMatch, type ProfileLike } from "@/lib/matching";
+import { q1 } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +26,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Search rate limit reached. Please wait a few seconds.", retryAfter: 10 }, { status: 429 });
   }
   const sp = req.nextUrl.searchParams;
+  const profileRow = q1<{ data: string }>("SELECT data FROM academic_profiles WHERE user_id=@uid", { uid: s.userId });
+  let profileLike: ProfileLike | null = null;
+  try { if (profileRow) profileLike = JSON.parse(profileRow.data) as ProfileLike; } catch { profileLike = null; }
+  const noProfile = !profileLike || (!(profileLike.researchInterests?.length) && !(profileLike.skills?.length));
   const query = sp.get("q")?.trim() ?? "";
   const institution = sp.get("institution")?.trim() ?? "";
   const country = sp.get("country")?.trim() ?? "";
@@ -36,7 +42,10 @@ export async function GET(req: NextRequest) {
     const results = q
       ? SAMPLE_RESEARCHERS.filter((r) => (r.name + " " + r.topics.join(" ") + " " + (r.institution ?? "")).toLowerCase().includes(q))
       : SAMPLE_RESEARCHERS;
-    return NextResponse.json({ results, total: results.length, page: 1, pages: 1, demo: true });
+    return NextResponse.json({
+      results: results.map((r) => ({ ...r, match: computeMatch(profileLike, r) })),
+      total: results.length, page: 1, pages: 1, demo: true, noProfile,
+    });
   }
 
   if (!query && !institution) {
@@ -48,7 +57,7 @@ export async function GET(req: NextRequest) {
     // Deduplicate by stable OpenAlex id (shared names are NOT merged — different IDs may be different people).
     const seen = new Set<string>();
     out.results = out.results.filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
-    return NextResponse.json(out);
+    return NextResponse.json({ ...out, results: out.results.map((r) => ({ ...r, match: computeMatch(profileLike, r) })), noProfile });
   } catch (e: any) {
     if (e instanceof UpstreamError) {
       const status = e.rateLimited ? 429 : 502;
