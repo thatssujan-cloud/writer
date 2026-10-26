@@ -1,0 +1,92 @@
+// Clearly-marked SAMPLE data for demo mode. These are FICTIONAL illustrative records,
+// stored separately from live OpenAlex results, and always labeled "Sample data" in the UI.
+import type { Researcher, FundingOpportunity } from "@/lib/types";
+
+export const SAMPLE_RESEARCHERS: Researcher[] = [
+  {
+    id: "sample:R001",
+    name: "Dr. Amina Farouk",
+    institution: "Northfield University (fictional)",
+    department: "Department of Environmental Engineering",
+    country: "US",
+    topics: ["membrane filtration", "wastewater treatment", "microplastics removal"],
+    worksCount: 42,
+    citedByCount: 810,
+    email: null,
+    emailStatus: "missing",
+    profileUrl: null,
+    publications: [
+      { title: "Fouling-resistant nanocomposite membranes for municipal wastewater reuse", year: 2024, doi: null, url: null, venue: "Journal of Membrane Science (sample)", citedBy: 12 },
+      { title: "Microplastic capture efficiency of biofilm-integrated filtration systems", year: 2023, doi: null, url: null, venue: "Water Research X (sample)", citedBy: 30 },
+    ],
+    source: "sample",
+    retrievedAt: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: "sample:R002",
+    name: "Prof. Henrik Sørensen",
+    institution: "Aalborg Polytechnic Institute (fictional)",
+    department: "Wind Energy Systems Group",
+    country: "DK",
+    topics: ["wind turbine aerodynamics", "structural health monitoring", "offshore energy"],
+    worksCount: 77,
+    citedByCount: 2100,
+    email: null,
+    emailStatus: "missing",
+    profileUrl: null,
+    publications: [
+      { title: "Digital-twin based fatigue prediction for offshore turbine blades", year: 2025, doi: null, url: null, venue: "Renewable Energy Letters (sample)", citedBy: 8 },
+    ],
+    source: "sample",
+    retrievedAt: "2026-01-01T00:00:00Z",
+  },
+];
+
+export const SAMPLE_OPPORTUNITIES: FundingOpportunity[] = [
+  {
+    id: "sample:O001",
+    title: "Graduate Assistantships at sample universities (illustrative guidance)",
+    provider: "LetterDesk sample content",
+    category: "RA",
+    degreeLevel: "both",
+    field: "Any STEM field",
+    country: "US",
+    fundingDetails: "Typically tuition remission plus a monthly stipend; amounts vary widely by institution and are set by each university.",
+    eligibility: "Admission (or concurrent application) to a graduate program; departmental selection.",
+    deadline: null,
+    deadlineIsEstimated: false,
+    startDate: null,
+    url: "https://www.usnews.com/best-graduates",
+    verification: "generic_guidance",
+    lastChecked: "2026-01-01",
+    sample: true,
+  },
+  {
+    id: "sample:O002",
+    title: "Commonwealth Shared Scholarships (example record — check official site)",
+    provider: "Commonwealth Scholarship Commission (real program; this card is a sample placeholder)",
+    category: "university_scholarship",
+    degreeLevel: "masters",
+    field: "Development-related fields",
+    country: "GB",
+    fundingDetails: "Full tuition, airfare and stipend per the official scheme rules — see the official page for current figures.",
+    eligibility: "Citizens of eligible Commonwealth countries; applying for a master's in the UK.",
+    deadline: null,
+    deadlineIsEstimated: true,
+    startDate: "September intake (typical)",
+    url: "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-scholarships-and-fellowships-master-s-split-awards/",
+    verification: "official_unconfirmed",
+    lastChecked: "2026-01-01",
+    sample: true,
+  },
+];
+
+export const OFFICIAL_SEARCH_LINKS = [
+  { label: "Erasmus+ Funding & Tenders Portal (EU)", url: "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/home" },
+  { label: "Commonwealth Scholarships (UK)", url: "https://cscuk.fcdo.gov.uk/scholarships/" },
+  { label: "DAAD Scholarship Database (Germany)", url: "https://www.daad.de/en/study-and-research-in-germany/scholarships/" },
+  { label: "Natural Sciences and Engineering Research Council (Canada)", url: "https://www.nserc-crsng.gc.ca/Students-Etudiants/index_eng.asp" },
+  { label: "FindAPhD.com — funded PhD listings", url: "https://www.findaphd.com/phds/" },
+  { label: "Euraxess Researcher & Innovation jobs (Europe)", url: "https://euraxess.ec.europa.eu/jobs" },
+  { label: "Presidential/Federal Fellowships (USA)", url: "https://www.pif.fordfoundation.org/" },
+];
