@@ -26,6 +26,7 @@ export interface Researcher {
   publications: Publication[];
   source: "openalex" | "sample";
   retrievedAt: string;
+  profileText?: string;
 }
 
 export interface MatchDimension {

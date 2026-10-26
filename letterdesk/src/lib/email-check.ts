@@ -23,9 +23,9 @@ export function checkSyntax(email: string): SyntaxReport {
 }
 
 // NOTE: checkDns is server-side only (uses node:dns). Do not import it from client components.
-import { dns } from "node:dns";
+import { promises as dnsPromises, resolveMx as resolveMxCb } from "node:dns";
 import { promisify } from "node:util";
-const resolveMx = promisify(dns.resolveMx);
+const resolveMx = promisify(resolveMxCb);
 
 export type DnsResult = "mx_found" | "no_mx" | "a_fallback" | "lookup_failed" | "skipped";
 
@@ -41,7 +41,7 @@ export async function checkDns(email: string): Promise<{ result: DnsResult; deta
     }
   }
   try {
-    const a = await dns.promises.resolve(domain);
+    const a = await dnsPromises.resolve(domain);
     if (a.length > 0) return { result: "a_fallback", detail: `No MX records, but ${domain} has A records. Mail delivery unconfirmed.` };
     return { result: "no_mx", detail: `No MX or A records found for ${domain}. The address is likely invalid.` };
   } catch {
