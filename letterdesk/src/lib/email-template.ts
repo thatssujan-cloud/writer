@@ -62,7 +62,7 @@ export function generateTemplateEmail(i: TemplateInput): GeneratedEmail {
   const sk = skillPhrase(i.skills ?? []);
   if ((i.skills ?? []).length > 2) notes.push("Only the first two listed skills were used to keep the email focused.");
 
-  const topicStr = joinList(i.topics?.slice(0, 3), ", ");
+  const topicStr = joinList((i.topics ?? []).slice(0, 3), ", ");
   const pubRef = i.publicationTitle?.trim()
     ? `I recently read "${i.publicationTitle.trim()}${i.publicationYear ? ` (${i.publicationYear})` : ""}" `
     : topicStr
@@ -71,9 +71,9 @@ export function generateTemplateEmail(i: TemplateInput): GeneratedEmail {
   if (!i.publicationTitle && !topicStr) notes.push("No publication or verified research topic was available — the connection paragraph is intentionally general. Consider reading one recent paper and adding its title.");
 
   const opp = i.opportunityType?.trim() ||
-    (i.mode === "ra_inquiry" ? "a research assistantship while pursuing my studies"
-      : i.mode === "ta_inquiry" ? "teaching assistantship opportunities"
-      : i.mode === "grant_project" ? "opportunities connected to this project"
+    (i.mode.id === "ra_inquiry" ? "a research assistantship while pursuing my studies"
+      : i.mode.id === "ta_inquiry" ? "teaching assistantship opportunities"
+      : i.mode.id === "grant_project" ? "opportunities connected to this project"
       : `prospective ${degreeWord} student opportunities`);
 
   const ask =
@@ -97,7 +97,7 @@ export function generateTemplateEmail(i: TemplateInput): GeneratedEmail {
   let subject = "";
   let body = "";
 
-  switch (i.mode) {
+  switch (i.mode.id) {
     case "first_contact":
       subject = `Prospective ${degreeWord} student — ${topicStr ? topicStr.split(",")[0] : "your research group"}`;
       body = [

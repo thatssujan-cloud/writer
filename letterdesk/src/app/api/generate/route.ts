@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { generateTemplateEmail, shortenBody, wordCount } from "@/lib/email-template";
+import { generateTemplateEmail, shortenBody, wordCount, type TemplateInput } from "@/lib/email-template";
 import { aiConfigured, aiGenerate } from "@/lib/ai-provider";
 import type { EmailMode } from "@/lib/types";
 
@@ -28,25 +28,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ subject: String(body.subject ?? ""), body: shortenBody(body.currentBody.slice(0, 20000)), engine: "editor" });
   }
 
-  const input = {
-    mode: { id: modeId as EmailMode["id"], label: modeId, description: "" },
+  const str = (v: unknown, max: number): string | undefined =>
+    typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
+
+  const input: TemplateInput = {
+    mode: { id: modeId, label: modeId, description: "" } as EmailMode,
     studentName: String(body.studentName ?? "").slice(0, 120),
-    signature: body.signature ? String(body.signature).slice(0, 300) : undefined,
-    targetDegree: ["masters", "phd"].includes(body.targetDegree) ? body.targetDegree : "undecided",
-    intendedIntake: body.intendedIntake ? String(body.intendedIntake).slice(0, 60) : undefined,
+    signature: str(body.signature, 300),
+    targetDegree: (["masters", "phd"] as const).includes(body.targetDegree) ? body.targetDegree : "undecided",
+    intendedIntake: str(body.intendedIntake, 60),
     professorName: String(body.professorName ?? "").slice(0, 200),
-    professorEmail: body.professorEmail ? String(body.professorEmail).slice(0, 254) : undefined,
-    institution: body.institution ? String(body.institution).slice(0, 200) : undefined,
-    background: body.background ? String(body.background).slice(0, 1000) : undefined,
-    experience: body.experience ? String(body.experience).slice(0, 2000) : undefined,
-    publicationTitle: body.publicationTitle ? String(body.publicationTitle).slice(0, 400) : undefined,
+    professorEmail: str(body.professorEmail, 254),
+    institution: str(body.institution, 200),
+    background: str(body.background, 1000),
+    experience: str(body.experience, 2000),
+    publicationTitle: str(body.publicationTitle, 400),
     publicationYear: Number.isFinite(Number(body.publicationYear)) ? Number(body.publicationYear) : null,
     topics: Array.isArray(body.topics) ? body.topics.slice(0, 6).map((t: unknown) => String(t).slice(0, 120)) : [],
     skills: Array.isArray(body.skills) ? body.skills.slice(0, 4).map((t: unknown) => String(t).slice(0, 80)) : [],
-    opportunityType: body.opportunityType ? String(body.opportunityType).slice(0, 200) : undefined,
-    tone: ["formal", "warm", "direct"].includes(body.tone) ? body.tone : "formal",
+    opportunityType: str(body.opportunityType, 200),
+    tone: (["formal", "warm", "direct"] as const).includes(body.tone) ? body.tone : "formal",
     targetLength: body.targetLength === "short" ? "short" : "standard",
-    originalMessageSummary: body.originalMessageSummary ? String(body.originalMessageSummary).slice(0, 300) : undefined,
+    originalMessageSummary: str(body.originalMessageSummary, 300),
   };
 
   if (engine === "ai") {
@@ -67,12 +70,12 @@ export async function POST(req: NextRequest) {
       const out = await aiGenerate({
         mode: modeId,
         professorName: input.professorName,
-        verifiedTopics: input.topics,
+        verifiedTopics: input.topics ?? [],
         publicationTitle: input.publicationTitle,
         studentName: input.studentName,
         background: input.background ?? "",
         experience: input.experience ?? "",
-        skills: input.skills,
+        skills: input.skills ?? [],
         targetDegree: input.targetDegree,
         intake: input.intendedIntake,
         tone: input.tone,
