@@ -161,11 +161,13 @@ export default function ResearcherDetailClient({ id }: { id: string }) {
                 <p className="mt-2 text-xs text-slate-500">LetterDesk only displays addresses present in credible source records — never guessed patterns. Confirm on the official department page before relying on it.</p>
               </>
             ) : (
-              <p className="mt-2 text-sm text-slate-600">
-                No address is listed in the source record.{" "}
-                <StatusBadge status="missing" />
-              </p>
-              <p className="mt-2 text-xs text-slate-500">Find the official contact on the university’s faculty directory, then add it manually in the Outreach Tracker with its source noted.</p>
+              <>
+                <p className="mt-2 text-sm text-slate-600">
+                  No address is listed in the source record.{" "}
+                  <StatusBadge status="missing" />
+                </p>
+                <p className="mt-2 text-xs text-slate-500">Find the official contact on the university’s faculty directory, then add it manually in the Outreach Tracker with its source noted.</p>
+              </>
             )}
           </section>
 

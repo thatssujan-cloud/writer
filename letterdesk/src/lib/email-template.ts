@@ -196,3 +196,84 @@ export function shortenBody(body: string): string {
 export function wordCount(text: string): number {
   return text.split(/\s+/).filter((w) => /[\w]/.test(w)).length;
 }
+
+// ---------- Lightweight rewriting helpers (deterministic, no AI key required) ----------
+
+const FILLER_PATTERNS: [RegExp, string][] = [
+  [/\bi have a keen interest\b/gi, "I am interested"],
+  [/\bkeen interest\b/gi, "interest"],
+  [/\bvery much\b/gi, ""],
+  [/\breally\b/gi, ""],
+  [/\bactually\b/gi, ""],
+  [/\bjust\b/gi, ""],
+  [/\bauxiliar/i, "auxiliary"], // no-op guard
+  [/\bhuge fan of\b/gi, "I have followed"],
+  [/\bit would be an absolute honor to\b/gi, "I would value the chance to"],
+  [/\bit would be an honour to\b/gi, "I would value the chance to"],
+  [/\bI am writing to express my sincere interest\b/gi, "I am writing about my interest"],
+  [/\bsincere(?:ly)?\s+interest\b/gi, "interest"],
+  [/\bwith great enthusiasm\b/gi, ""],
+  [/\bpassionate about\b/gi, "interested in"],
+  [/\bcutting-edge\b/gi, "recent"],
+  [/\bstate-of-the-art\b/gi, "current"],
+  [/\bnovel and innovative\b/gi, "new"],
+];
+
+/** Deterministic grammar/clarity cleanup. No content is invented; only filler words and spacing are fixed. */
+export function grammarFix(text: string): string {
+  let t = text.replace(/[ \t]{2,}/g, " ").replace(/ ([,.!?;:])/g, "$1").replace(/\?([?!])/g, "?$1");
+  for (const [re, rep] of FILLER_PATTERNS) t = t.replace(re, rep);
+  t = t.replace(/ +([,.!?])/g, "$1").replace(/([,.!?]) {2,}/g, "$1 ");
+  t = t.replace(/\b(\w+) \1\b/gi, "$1"); // repeated word like "the the"
+  t = t.replace(/^(\w)/, (m) => m.toUpperCase());
+  t = t.replace(/\n{3,}/g, "\n\n").trim();
+  return t;
+}
+
+/** Replace hollow compliments with neutral phrasing so praise becomes description of the work. */
+export function improveResearchConnection(body: string, topics: string[] = []): string {
+  let t = body
+    .replace(/\byour (?:amazing|incredible|world[- ]class|prestigious|renowned) (?:work|research)\b/gi, "your research")
+    .replace(/\bI am (?:truly |deeply |extremely )?(?:inspired|impressed|honored|humbled) by\b/gi, "I want to learn more about")
+    .replace(/\bI have (?:long )?admired\b/gi, "I have read");
+  const topicStr = topics.slice(0, 2).join(" and ");
+  if (topicStr) {
+    t = t.replace(/\byour research\b(?!.{0,40}\b(on|in|about)\b)/i, `your research on ${topicStr}`);
+  }
+  return t.trim();
+}
+
+/** Make phrasing less stiff/formulaic without changing facts. */
+export function rewriteNaturally(body: string): string {
+  let t = body
+    .replace(/\bI hope this email finds you well\.?\s*/gi, "I hope you are doing well. ")
+    .replace(/\bPlease do not hesitate to contact me\b/gi, "I am glad to answer any questions")
+    .replace(/\bdo not hesitate to reach out\b/gi, "feel free to ask")
+    .replace(/\bFurthermore,?\b/gi, "Also,")
+    .replace(/\bMoreover,?\b/gi, "In addition,")
+    .replace(/\bWith due respect,\s*/gi, "")
+    .replace(/\bRespectfully yours,?\b/gi, "Respectfully,")
+    .replace(/\battain(?:ing)?\b/gi, "complete")
+    .replace(/\butilize\b/gi, "use")
+    .replace(/\bin order to\b/gi, "to")
+    .replace(/\bsubsequent(?:ly)?\b/gi, "later")
+    .replace(/\bpursuant to\b/gi, "following");
+  return grammarFix(t);
+}
+
+/** Tone swap: keep identical content, adjust greeting/closing/formality markers. */
+export function changeTone(body: string, tone: "formal" | "warm" | "direct"): string {
+  const closings: Record<string, string> = { formal: "Respectfully,", warm: "With appreciation,", direct: "Best regards," };
+  let t = body.replace(
+    /(Sincerely|Best regards|Kind regards|Respectfully(,? yours)?|With appreciation)[,\.]?\s*\n\s*([^\n]+)$/i,
+    `${closings[tone]}\n$2`
+  );
+  if (tone === "direct") {
+    t = t.replace(/\bIf you are open to it,?\s*/gi, "").replace(/\bI would be grateful if\b/gi, "I would like it if");
+  } else if (tone === "warm") {
+    t = t.replace(/\bI would like to respectfully ask\b/gi, "I would love to ask");
+  } else {
+    t = t.replace(/\bI would love to\b/gi, "I would like to");
+  }
+  return t.trim();
+}

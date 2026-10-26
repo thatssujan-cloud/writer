@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { checkSyntax, checkDns, verificationLabel } from "@/lib/email-check";
+import { checkDns, verificationLabel } from "@/lib/email-check";
+import { checkSyntax } from "@/lib/email-syntax";
 
 export const runtime = "nodejs";
 
