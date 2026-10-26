@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState, ErrorNote, Spinner, StatusBadge, Toast } from "@/components/ui";
 import { EMAIL_MODES, type EmailMode, type Researcher } from "@/lib/types";
-import { checkSyntax } from "@/lib/email-check";
+import { checkSyntax } from "@/lib/email-syntax";
 
 // ---- pure client-side helpers (kept here so tests can import them) ----
 
@@ -125,7 +125,7 @@ export default function StudioClient({ researchers, profile, draftId, preselect,
           background, experience, publicationTitle,
           publicationYear: publicationYear ? Number(publicationYear) : null,
           topics: researcher?.topics ?? [],
-          skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+          skills: skills.split(",").map((s: string) => s.trim()).filter(Boolean),
           opportunityType,
           originalMessageSummary: mode === "follow_up" ? originalSummary : undefined,
           currentBody: bodyText,

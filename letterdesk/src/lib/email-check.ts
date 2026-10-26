@@ -1,28 +1,6 @@
-// Email address validation: syntax (client+server shared), suspicious patterns, DNS MX check (server only).
-// IMPORTANT: passing checks never proves a mailbox exists.
-
-const SYNTAX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-
-export interface SyntaxReport { valid: boolean; messages: string[] }
-
-export function checkSyntax(email: string): SyntaxReport {
-  const msgs: string[] = [];
-  const e = email.trim();
-  if (!e) return { valid: false, messages: ["Address is empty."] };
-  if (/\s/.test(e)) msgs.push("Contains whitespace.");
-  if (!SYNTAX.test(e)) msgs.push("Does not match a standard email format.");
-  if (/^[^@]+@[^@]*--/.test(e)) msgs.push("Domain looks unusual (double hyphen).");
-  if (e.split("@")[1]?.startsWith(".")) msgs.push("Domain starts with a dot.");
-  if ((e.match(/\.\./g) ?? []).length > 0) msgs.push("Contains consecutive dots.");
-  const freeMailDomains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com"];
-  const domain = e.split("@")[1]?.toLowerCase() ?? "";
-  if (msgs.length === 0 && freeMailDomains.includes(domain)) {
-    msgs.push("Free email domain — for university outreach, prefer an official institutional address from the department page.");
-  }
-  return { valid: SYNTAX.test(e) && !/\s/.test(e), messages: msgs };
-}
-
-// NOTE: checkDns is server-side only (uses node:dns). Do not import it from client components.
+// SERVER-ONLY email verification: DNS MX/A checks + honest labels.
+// NOTE: Do not import this module from client components (uses node:dns).
+// For shared syntax checks import "@/lib/email-syntax" instead.
 import { promises as dnsPromises, resolveMx as resolveMxCb } from "node:dns";
 import { promisify } from "node:util";
 const resolveMx = promisify(resolveMxCb);
@@ -37,7 +15,7 @@ export async function checkDns(email: string): Promise<{ result: DnsResult; deta
     if (mx.length > 0) return { result: "mx_found", detail: `Mail exchanger records found for ${domain}.` };
   } catch (e: any) {
     if (e?.code !== "ENODATA" && e?.code !== "ENOTFOUND") {
-      // fall through to A lookup attempt below for ENODATA/ENOTFOUND only handled as no-mx path
+      // fall through to A lookup attempt below
     }
   }
   try {
